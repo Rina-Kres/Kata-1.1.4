@@ -9,7 +9,7 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
     UserDaoJDBCImpl userDaoJDBC = new UserDaoJDBCImpl();
 
-    public UserServiceImpl() throws SQLException{
+    public UserServiceImpl() throws SQLException {
     }
 
     public void createUsersTable() throws SQLException {

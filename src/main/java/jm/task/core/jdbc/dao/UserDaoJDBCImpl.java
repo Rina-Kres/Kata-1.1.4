@@ -13,11 +13,11 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
 
     Connection connection = getConnection();
 
-    public UserDaoJDBCImpl() throws SQLException {
+//    public UserDaoJDBCImpl() throws SQLException {
+//
+//    }
 
-    }
-
-    public void createUsersTable() throws SQLException {
+    public void createUsersTable()  {
 
         String sql = "CREATE TABLE IF NOT EXISTS users (\n" +
                 " ID INT NOT NULL AUTO_INCREMENT, \n" +
@@ -33,6 +33,7 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        System.out.println("The \"users\" table has been successfully created.");
     }
 
     public void dropUsersTable() {
@@ -51,9 +52,11 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate("INSERT INTO users(NAME, LASTNAME, AGE) " +
                     "VALUES(' " + name + "', '" + lastName + "', '" + age + " ')");
+                    System.out.println(name + lastName + " добавлен");
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        System.out.println(name + lastName + " добавлен");
     }
 
     public void removeUserById(long id) {
@@ -74,21 +77,20 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
             ResultSet resultSet = statement.executeQuery(sql);
 
             while (resultSet.next()) {
-                int id = resultSet.getInt("id");
+                long id = resultSet.getLong("id");
                 String name = resultSet.getString("name");
                 String lastname = resultSet.getString("lastname");
                 int age = resultSet.getInt("age");
 
-
+                // Создание объекта User с помощью конструктора
                 User user = new User(name, lastname, (byte) age);
                 users.add(user);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-            return users;
-        }
-
+        return users;
+    }
 
     public void cleanUsersTable() {
         try {
@@ -98,5 +100,6 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        System.out.println("Данные таблицы 'users' успешно удалены");
     }
 }
