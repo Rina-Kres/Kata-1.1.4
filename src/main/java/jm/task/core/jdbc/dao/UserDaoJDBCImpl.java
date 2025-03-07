@@ -37,26 +37,21 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
     }
 
     public void dropUsersTable() {
-        String sql = "DROP TABLE users;";
-
-        try {
-            Statement statement = connection.createStatement();
-            statement.executeUpdate(sql);
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("DROP TABLE IF EXISTS users");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.out.println("Problem with dropping table.");
         }
-
     }
 
     public void saveUser(String name, String lastName, byte age) {
         try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("INSERT INTO users(NAME, LASTNAME, AGE) " +
-                    "VALUES(' " + name + "', '" + lastName + "', '" + age + " ')");
-                    System.out.println(name + lastName + " добавлен");
+            statement.execute("INSERT INTO users VALUES (NULL, '" + name + "', '" + lastName + "', " + age + ")");
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        System.out.println(name + lastName + " добавлен");
+        System.out.println(name + lastName + " добавлен в базу данных");
     }
 
     public void removeUserById(long id) {
@@ -65,7 +60,7 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.out.println("Problem with save user.");
         }
     }
 
@@ -73,32 +68,27 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
         List<User> users = new ArrayList<>();
         try {
             Statement statement = connection.createStatement();
-            String sql = "SELECT * FROM users";
-            ResultSet resultSet = statement.executeQuery(sql);
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM users");
 
             while (resultSet.next()) {
-                long id = resultSet.getLong("id");
-                String name = resultSet.getString("name");
-                String lastname = resultSet.getString("lastname");
-                int age = resultSet.getInt("age");
-
-                // Создание объекта User с помощью конструктора
-                User user = new User(name, lastname, (byte) age);
+                User user = new User();
+                user.setId(resultSet.getLong("id"));
+                user.setName(resultSet.getString("name"));
+                user.setLastName(resultSet.getString("last_name"));
+                user.setAge(resultSet.getByte("age"));
                 users.add(user);
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.out.println("Problem with loading users.");
         }
         return users;
     }
 
     public void cleanUsersTable() {
-        try {
-            String sql = "DELETE FROM users";
-            Statement statement = connection.createStatement();
-            statement.executeUpdate(sql);
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("DELETE FROM users");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.out.println("Problem with cleaning table");
         }
         System.out.println("Данные таблицы 'users' успешно удалены");
     }
