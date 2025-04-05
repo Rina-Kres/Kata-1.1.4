@@ -11,8 +11,8 @@ import java.sql.SQLException;
 public class Util {
     // JDBC параметры
     private final static String URL = "jdbc:mysql://localhost:3306/user_db";
-    private final static String USERNAME = "user";
-    private final static String PASSWORD = "Arthur010279+";
+    private final static String USERNAME = "root";
+    private final static String PASSWORD = "k2775G901Td9";
 
     // Hibernate SessionFactory
     private static SessionFactory sessionFactory;
@@ -41,7 +41,7 @@ public class Util {
     }
 
     // Метод для получения JDBC соединения
-    public Connection getConnection() {
+    public static Connection getConnection() {
         Connection connection = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver"); // Используйте правильный драйвер

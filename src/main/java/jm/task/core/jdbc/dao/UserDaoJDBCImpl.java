@@ -3,84 +3,81 @@ package jm.task.core.jdbc.dao;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-
-    private final Connection connection = new Util().getConnection();
-
+    private static final String TABLE_NAME = "users";
+    private final Connection connection;
 
     public UserDaoJDBCImpl() {
-
+        this.connection = Util.getConnection();
     }
 
+    @Override
     public void createUsersTable() {
-        try (Statement statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE IF NOT EXISTS users" +
-                    "(id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, " +
-                    "name VARCHAR(50) NOT NULL," +
-                    "last_name VARCHAR(50) NOT NULL," +
-                    "age TINYINT NOT NULL)");
-        } catch (SQLException e) {
-            System.out.println("Problem with creating table");
-        }
+        String sql = String.format("CREATE TABLE IF NOT EXISTS %s (" +
+                "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, " +
+                "name VARCHAR(50) NOT NULL, " +
+                "last_name VARCHAR(50) NOT NULL, " +
+                "age TINYINT NOT NULL)", TABLE_NAME);
+
+        executeUpdate(sql, "Problem with creating table");
     }
 
+    @Override
     public void dropUsersTable() {
-        try (Statement statement = connection.createStatement()) {
-            statement.execute("DROP TABLE IF EXISTS users");
-        } catch (SQLException e) {
-            System.out.println("Problem with dropping table");
-        }
+        executeUpdate("DROP TABLE IF EXISTS " + TABLE_NAME,
+                "Problem with dropping table");
     }
 
+    @Override
     public void saveUser(String name, String lastName, byte age) {
-        try (Statement statement = connection.createStatement()) {
-            statement.execute("INSERT INTO users VALUES (NULL, '" + name + "', '" + lastName + "', " + age + ")");
-        } catch (SQLException e) {
-            System.out.println("Problem with save user");
-        }
+        String sql = String.format("INSERT INTO %s (name, last_name, age) VALUES ('%s', '%s', %d)",
+                TABLE_NAME, name, lastName, age);
+        executeUpdate(sql, "Problem with save user");
     }
 
+    @Override
     public void removeUserById(long id) {
-        try (Statement statement = connection.createStatement()) {
-            statement.execute("DELETE FROM users WHERE id = " + id);
-        } catch (SQLException e) {
-            System.out.println("Problem with save user");
-        }
+        executeUpdate("DELETE FROM " + TABLE_NAME + " WHERE id = " + id,
+                "Problem with removing user");
     }
 
+    @Override
     public List<User> getAllUsers() {
-        ArrayList<User> users = new ArrayList<>();
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("SELECT * FROM users")
-        ) {
-            while (resultSet.next()) {
-                User user = new User();
-                user.setId(resultSet.getLong("id"));
-                user.setName(resultSet.getString("name"));
-                user.setLastName(resultSet.getString("last_name"));
-                user.setAge(resultSet.getByte("age"));
-                users.add(user);
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT id, name, last_name, age FROM " + TABLE_NAME;
 
+        try (Statement statement = connection.createStatement();
+             ResultSet rs = statement.executeQuery(sql)) {
+
+            while (rs.next()) {
+                User user = new User();
+                user.setId(rs.getLong("id"));
+                user.setName(rs.getString("name"));
+                user.setLastName(rs.getString("last_name"));
+                user.setAge(rs.getByte("age"));
+                users.add(user);
             }
         } catch (SQLException e) {
-            System.out.println("Problem with loading users");
+            System.err.println("Error loading users: " + e.getMessage());
         }
         return users;
-
     }
 
+    @Override
     public void cleanUsersTable() {
+        executeUpdate("DELETE FROM " + TABLE_NAME,
+                "Problem with cleaning table");
+    }
+
+    private void executeUpdate(String sql, String errorMessage) {
         try (Statement statement = connection.createStatement()) {
-            statement.execute("DELETE FROM users");
+            statement.executeUpdate(sql);
         } catch (SQLException e) {
-            System.out.println("Problem with cleaning table");
+            System.err.println(errorMessage + ": " + e.getMessage());
         }
     }
 }
