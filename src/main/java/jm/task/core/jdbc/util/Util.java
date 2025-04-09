@@ -1,5 +1,6 @@
 package jm.task.core.jdbc.util;
 
+import jm.task.core.jdbc.model.User;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -9,38 +10,34 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class Util {
-    // JDBC параметры
-    private final static String URL = "jdbc:mysql://localhost:3306/user_db";
+    private final static String URL = "jdbc:mysql://localhost:3306/user_db?useSSL=false&serverTimezone=UTC";
     private final static String USERNAME = "root";
     private final static String PASSWORD = "k2775G901Td9";
 
-    // Hibernate SessionFactory
     private static SessionFactory sessionFactory;
 
-    // Метод для получения SessionFactory Hibernate
     public static SessionFactory getSessionFactory() {
 
         if (sessionFactory == null) {
             try {
                 Configuration configuration = new Configuration();
-                configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+                configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQL8Dialect");
                 configuration.setProperty("hibernate.connection.driver_class", "com.mysql.cj.jdbc.Driver");
-                configuration.setProperty("hibernate.connection.url",URL);
+                configuration.setProperty("hibernate.connection.url", URL);
                 configuration.setProperty("hibernate.connection.username", USERNAME);
                 configuration.setProperty("hibernate.connection.password", PASSWORD);
                 configuration.setProperty("hibernate.show_sql", "true");
 
-                // Создание SessionFactory
-                sessionFactory = configuration.buildSessionFactory(new StandardServiceRegistryBuilder()
-                        .applySettings(configuration.getProperties()).build());
+                configuration.addAnnotatedClass(User.class);
+                sessionFactory = configuration.buildSessionFactory();
             } catch (Throwable ex) {
+                System.err.println("Initial SessionFactory creation failed." + ex);
                 throw new ExceptionInInitializerError(ex);
             }
         }
         return sessionFactory;
     }
 
-    // Метод для получения JDBC соединения
     public static Connection getConnection() {
         Connection connection = null;
         try {
@@ -54,7 +51,6 @@ public class Util {
         return connection;
     }
 
-    // Метод для закрытия SessionFactory
     public static void shutdown() {
         if (sessionFactory != null) {
             sessionFactory.close();
